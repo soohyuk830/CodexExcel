@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#e6ebf3">
+    <title>엑셀 데이터</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+    <script src="item-picker.js" defer></script>
+    <script src="order-submit.js" defer></script>
+    <script src="order-delete.js" defer></script>
+    <script src="mail-preview.js" defer></script>
+  </head>
+  <body>
+    <main class="shell">
+      <section class="workbooks" aria-labelledby="workbooks-title">
+        <header class="workspace-header">
+          <h1 id="workbooks-title">엑셀 데이터</h1>
+          <div class="workbook-switcher" role="group" aria-label="조회할 엑셀 선택">
+            <button type="button" data-workbook="materials" aria-pressed="true" aria-controls="workbook-panel">재질</button>
+            <button type="button" data-workbook="products" aria-pressed="false" aria-controls="workbook-panel">품목</button>
+            <button type="button" data-workbook="customers" aria-pressed="false" aria-controls="workbook-panel">거래처</button>
+            <button type="button" data-workbook="orders" aria-pressed="false" aria-controls="workbook-panel">주문</button>
+          </div>
+        </header>
+        <div class="selection-summaries">
+          <section class="item-summary" aria-labelledby="item-summary-title">
+            <h2 id="item-summary-title">선택 품목</h2>
+            <button class="outline-button selection-opener" id="open-item-picker" type="button" aria-haspopup="dialog" aria-controls="item-picker">품목 선택</button>
+            <div class="item-summary-details" role="status">
+              <p id="item-unselected">선택한 품목이 없습니다.</p>
+              <dl id="selected-item" hidden>
+                <div><dt>품목코드</dt><dd id="selected-item-code"></dd></div>
+                <div><dt>품목명</dt><dd id="selected-item-name"></dd></div>
+                <div><dt>규격</dt><dd id="selected-item-spec"></dd></div>
+              </dl>
+            </div>
+          </section>
+          <section class="item-summary" aria-labelledby="customer-summary-title">
+            <h2 id="customer-summary-title">선택 거래처</h2>
+            <button class="outline-button selection-opener" id="open-customer-picker" type="button" aria-haspopup="dialog" aria-controls="item-picker">거래처 선택</button>
+            <div class="item-summary-details" role="status">
+              <p id="customer-unselected">선택한 거래처가 없습니다.</p>
+              <dl id="selected-customer" hidden>
+                <div><dt>거래처코드</dt><dd id="selected-customer-code"></dd></div>
+                <div><dt>거래처명</dt><dd id="selected-customer-name"></dd></div>
+                <div><dt>담당자</dt><dd id="selected-customer-contact"></dd></div>
+              </dl>
+            </div>
+          </section>
+        </div>
+        <section class="workbook-panel" id="workbook-panel" aria-labelledby="workbook-title">
+          <div class="workbook-heading">
+            <div>
+              <h2 id="workbook-title">재질 목록</h2>
+              <p class="workbook-source" id="workbook-source">재질정보.xlsx</p>
+            </div>
+            <p class="workbook-count" id="workbook-count" role="status" hidden></p>
+          </div>
+          <div class="material-picker" id="material-picker" hidden>
+            <section class="weight-calculator" aria-labelledby="weight-calculator-title">
+              <h3 id="weight-calculator-title">재질별 중량 계산기</h3>
+              <div class="weight-fields">
+                <div class="weight-material">
+                  <label for="material-code">재질</label>
+                  <div class="glass-select">
+                    <select id="material-code" name="materialCode" disabled>
+                      <option value="">재질을 선택하세요</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="weight-material">
+                  <label for="material-density">비중(계산용 밀도, g/cm³)</label>
+                  <input id="material-density" type="text" readonly>
+                </div>
+                <div>
+                  <label for="weight-volume">개당 부피 (cm³)</label>
+                  <input id="weight-volume" type="number" min="0" step="any" inputmode="decimal">
+                </div>
+                <div>
+                  <label for="weight-quantity">수량 (개)</label>
+                  <input id="weight-quantity" type="number" min="1" step="1" inputmode="numeric" value="1">
+                </div>
+              </div>
+              <dl class="weight-results">
+                <div>
+                  <dt id="unit-weight-label">개당 중량</dt>
+                  <dd><output id="unit-weight" for="material-code weight-volume" aria-labelledby="unit-weight-label">—</output></dd>
+                </div>
+                <div>
+                  <dt id="total-weight-label">총 중량</dt>
+                  <dd><output id="total-weight" for="material-code weight-volume weight-quantity" aria-labelledby="total-weight-label">—</output></dd>
+                </div>
+              </dl>
+              <p id="weight-message" class="weight-message" role="status">재질을 선택하세요.</p>
+            </section>
+            <div class="order-actions">
+              <button class="outline-button selection-opener" id="submit-order" type="button">주문 저장</button>
+              <button class="outline-button" id="show-orders" type="button" hidden>주문 목록 보기</button>
+              <button class="outline-button" id="preview-saved-order" type="button" aria-haspopup="dialog" aria-controls="mail-preview-dialog" hidden>메일 미리보기</button>
+              <p id="order-feedback" role="status" hidden></p>
+            </div>
+          </div>
+          <div class="workbook-tools" id="workbook-tools" hidden>
+            <label for="workbook-search">표 검색</label>
+            <div class="glass-search">
+              <input id="workbook-search" type="search" placeholder="표에 표시된 값 검색" autocomplete="off" aria-controls="workbook-table">
+            </div>
+            <button class="outline-button" id="workbook-refresh" type="button">엑셀 새로 읽기</button>
+          </div>
+          <p class="workbook-message" id="workbook-sync" role="status" hidden></p>
+          <p class="workbook-message" id="order-delete-feedback" role="status" hidden></p>
+          <p class="workbook-message" id="workbook-message" role="status" hidden></p>
+          <noscript><p class="workbook-message">엑셀 데이터를 보려면 JavaScript를 켜 주세요.</p></noscript>
+          <button class="outline-button retry" id="workbook-retry" type="button" hidden>다시 불러오기</button>
+          <div class="table-scroll" id="workbook-table" role="region" aria-labelledby="workbook-title" tabindex="0" hidden>
+            <table aria-labelledby="workbook-title">
+              <thead></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+    </main>
+    <dialog class="item-dialog" id="item-picker" aria-labelledby="item-picker-title">
+      <div class="item-dialog-heading">
+        <h2 id="item-picker-title">품목 검색</h2>
+        <button class="outline-button item-close" id="close-item-picker" type="button" aria-label="닫기">×</button>
+      </div>
+      <form class="item-search-form" id="item-search-form" role="search">
+        <label for="item-query">검색어</label>
+        <div class="glass-search">
+          <input id="item-query" name="q" type="search" placeholder="코드, 품목명, 규격 검색" autocomplete="off" autofocus>
+        </div>
+        <button class="outline-button" type="submit">검색</button>
+      </form>
+      <p class="item-search-message" id="item-search-message" role="status"></p>
+      <div class="item-search-results" id="item-search-results" role="region" aria-label="품목 검색 결과" tabindex="0" hidden>
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">선택</th>
+              <th scope="col">코드</th>
+              <th scope="col">품목명</th>
+              <th scope="col">규격</th>
+            </tr>
+          </thead>
+          <tbody id="item-search-rows"></tbody>
+        </table>
+      </div>
+      <div class="item-dialog-actions">
+        <button class="outline-button" id="cancel-item-picker" type="button">취소</button>
+        <button class="outline-button" id="confirm-item-picker" type="button" disabled>선택</button>
+      </div>
+    </dialog>
+    <dialog class="item-dialog order-delete-dialog" id="order-delete-dialog" aria-labelledby="order-delete-title" aria-describedby="order-delete-description">
+      <div class="item-dialog-heading">
+        <h2 id="order-delete-title">주문 삭제</h2>
+      </div>
+      <p id="order-delete-description">다음 주문을 삭제하시겠습니까?</p>
+      <dl class="order-delete-details">
+        <div><dt>요청ID</dt><dd id="delete-order-id"></dd></div>
+        <div><dt>거래처</dt><dd id="delete-order-customer"></dd></div>
+        <div><dt>품목</dt><dd id="delete-order-item"></dd></div>
+      </dl>
+      <p id="order-delete-error" role="status" hidden></p>
+      <div class="item-dialog-actions">
+        <button class="outline-button" id="cancel-delete-order" type="button" autofocus>취소</button>
+        <button class="outline-button danger-button" id="confirm-delete-order" type="button">삭제</button>
+      </div>
+    </dialog>
+    <dialog class="item-dialog mail-preview-dialog" id="mail-preview-dialog" aria-labelledby="mail-preview-title" aria-describedby="mail-preview-note">
+      <div class="item-dialog-heading">
+        <h2 id="mail-preview-title">메일 미리보기</h2>
+        <button class="outline-button item-close" id="close-mail-preview" type="button" aria-label="닫기" autofocus>×</button>
+      </div>
+      <p id="mail-preview-note">미리보기 파일만 생성합니다. 실제 메일은 발송되지 않습니다.</p>
+      <p id="mail-preview-status" class="mail-preview-status" role="status"></p>
+      <form class="mail-preview-form" id="mail-preview-form" hidden>
+        <label for="mail-preview-recipient">수신자 이메일 (1명)</label>
+        <input class="mail-recipient" id="mail-preview-recipient" type="email" autocomplete="email" maxlength="254" required>
+        <dl class="mail-preview-content">
+          <div><dt>제목</dt><dd id="mail-preview-subject"></dd></div>
+          <div><dt id="mail-body-label">본문</dt><dd><pre id="mail-preview-body" aria-labelledby="mail-body-label" tabindex="0"></pre></dd></div>
+        </dl>
+        <div class="item-dialog-actions">
+          <button class="outline-button selection-opener" id="create-mail-preview" type="submit">확인하고 .eml 만들기</button>
+          <a class="outline-button mail-download" id="download-mail-preview" hidden>.eml 다운로드</a>
+        </div>
+      </form>
+    </dialog>
+  </body>
+</html>
