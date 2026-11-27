@@ -362,6 +362,13 @@ async function refreshWorkbook({ force = false } = {}) {
   }
 }
 
+const hosted = document.body.hasAttribute('data-hosted');
+if (hosted) {
+  document.querySelector('#hosted-notice').hidden = false;
+  document.querySelector('[data-workbook="orders"]').disabled = true;
+  document.querySelector('#submit-order').hidden = true;
+}
+
 for (const button of workbookButtons) {
   button.addEventListener('click', () => {
     if (button.dataset.workbook !== selectedWorkbook) selectWorkbook(button.dataset.workbook);
@@ -380,4 +387,5 @@ setInterval(() => {
   if (!document.hidden) refreshWorkbook();
 }, refreshInterval);
 const initialWorkbook = location.hash.slice(1);
-selectWorkbook(Object.hasOwn(workbookViews, initialWorkbook) ? initialWorkbook : selectedWorkbook);
+const canOpenWorkbook = Object.hasOwn(workbookViews, initialWorkbook) && !(hosted && initialWorkbook === 'orders');
+selectWorkbook(canOpenWorkbook ? initialWorkbook : selectedWorkbook);

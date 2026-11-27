@@ -1,0 +1,15 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": "node build-vercel.mjs",
+  "outputDirectory": "dist",
+  "functions": {
+    "api/handler.mjs": {
+      "includeFiles": "excel/{재질정보,품목내역,거래처내역}.xlsx",
+      "excludeFiles": "{excel/{user,주문내역}.xlsx,public/**,data/**}"
+    }
+  },
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "/api/handler?__path=:path*" }
+  ]
+}
